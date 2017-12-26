@@ -1,0 +1,2 @@
+nggak bisa pake @ di import... pakailah = ../
+ingat pake = mode : 'history' di atas routes index.js
