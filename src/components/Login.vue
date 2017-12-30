@@ -1,10 +1,17 @@
 <template>
    <div class="fade-in-top">
     <el-card class="box-card">
-        <el-input placeholder="username" v-model="username"></el-input>
+        <el-input  placeholder="name" v-model="name"></el-input>
+        <el-input type="email" placeholder="email" v-model="email"></el-input>
         <el-input placeholder="password" v-model="password"></el-input>
     <el-button type="primary" round  v-on:click="signup">signup</el-button>
     <el-button type="danger" round v-on:click="login">signin</el-button>
+    <fb-signin-button
+    :params="fbSignInParams"
+    @success="onSignInSuccess"
+    @error="onSignInError">
+    Sign in with Facebook
+  </fb-signin-button>
     </el-card>
    </div>
 </template>
@@ -16,30 +23,55 @@ export default {
   name : 'Login',
   data(){
     return {
-      username:'',
-      password:''
+      email:'',
+      password:'',
+      name:'',
+      fbSignInParams: {
+        scope: 'email,user_likes',
+        return_scopes: true
+      }
     }
   },
   methods:{
-    signup : function(){
-      let user = this.username;
-      let pass  = this.password;
-      axios.post('http://localhost:3000/api/signup',{username:user,password:pass})
+    onSignInSuccess (response) {
+      // console.log(response.authResponse.accessToken)
+      let token = response.authResponse.accessToken
+      axios.post('http://localhost:3000/api/facebooklogin',{accessToken:token})
       .then(response=>{
         console.log(response.data.data)
-        
+        let token = response.data.data
+        localStorage.setItem('token',token)
+        router.push({name:'HomeRoute'})
+      })
+      .catch(err=>{
+        console.log(err)
+      })
+    },
+    onSignInError (error) {
+      console.log('OH NOES', error)
+    },
+    signup : function(){
+      let name = this.name;
+      let user = this.email;
+      let pass  = this.password;
+      axios.post('http://localhost:3000/api/signup',{name:name,email:user,password:pass})
+      .then(response=>{
+        console.log(response.data.data)
+        return name = '',user ='' ,pass = ''
       })
     },
 
     login : function(){
-      let user = this.username;
+      let name = this.name;
+      let user = this.email;
       let pass = this.password;
       console.log('sudah masuk')
-      axios.post('http://localhost:3000/api/signin',{username:user,password:pass})
+      axios.post('http://localhost:3000/api/signin',{name:name,email:user,password:pass})
       .then(response=>{
         console.log(response.data.token)
         let token = response.data.token
         localStorage.setItem('token',token)
+        localStorage.setItem('name',name)
         router.push({name:'HomeRoute'})
       })
       .catch(err=>{
@@ -52,6 +84,14 @@ export default {
 
 
 <style scoped>
+.fb-signin-button {
+  /* This is where you control how the button looks. Be creative! */
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  background-color: #4267b2;
+  color: #fff;
+}
     .box-card{
         margin : 0px 100px 0px 100px
     }
